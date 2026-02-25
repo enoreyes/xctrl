@@ -6,8 +6,26 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-/// State file location for recording state persistence.
-const STATE_FILE: &str = "/tmp/xctrl-recording.json";
+/// Returns the path to the recording state file (~/.xctrl/recording.json).
+/// Falls back to /tmp/xctrl-recording.json if home directory is unavailable.
+fn state_file_path() -> std::path::PathBuf {
+    if let Some(home) = home_dir() {
+        let dir = home.join(".xctrl");
+        if !dir.exists() {
+            let _ = fs::create_dir_all(&dir);
+        }
+        dir.join("recording.json")
+    } else {
+        std::path::PathBuf::from("/tmp/xctrl-recording.json")
+    }
+}
+
+/// Get the user's home directory.
+fn home_dir() -> Option<std::path::PathBuf> {
+    std::env::var_os("HOME")
+        .or_else(|| std::env::var_os("USERPROFILE"))
+        .map(std::path::PathBuf::from)
+}
 
 /// Recording state persisted to disk.
 #[derive(Debug, Serialize, Deserialize)]
@@ -28,6 +46,14 @@ struct RecordingStatus {
     output: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pid: Option<u32>,
+}
+
+/// JSON output for a successful recording start.
+#[derive(Debug, Serialize)]
+struct StartResult {
+    recording: bool,
+    pid: u32,
+    output: String,
 }
 
 pub fn handle_screen(action: RecordAction, json: bool) {
@@ -139,13 +165,6 @@ fn start_recording_linux(output: &str, framerate: u32, json: bool) {
             };
             save_state(&state);
 
-            #[derive(Serialize)]
-            struct StartResult {
-                recording: bool,
-                pid: u32,
-                output: String,
-            }
-
             let result = StartResult {
                 recording: true,
                 pid,
@@ -192,13 +211,6 @@ fn start_recording_macos(output: &str, framerate: u32, json: bool) {
             };
             save_state(&state);
 
-            #[derive(Serialize)]
-            struct StartResult {
-                recording: bool,
-                pid: u32,
-                output: String,
-            }
-
             let result = StartResult {
                 recording: true,
                 pid,
@@ -241,13 +253,6 @@ fn start_recording_windows(output: &str, framerate: u32, json: bool) {
                 xvfb_display: None,
             };
             save_state(&state);
-
-            #[derive(Serialize)]
-            struct StartResult {
-                recording: bool,
-                pid: u32,
-                output: String,
-            }
 
             let result = StartResult {
                 recording: true,
@@ -308,7 +313,7 @@ fn handle_stop(json: bool) {
     }
 
     // Remove state file
-    let _ = fs::remove_file(STATE_FILE);
+    let _ = fs::remove_file(state_file_path());
 
     #[derive(Serialize)]
     struct StopResult {
@@ -368,18 +373,42 @@ fn handle_status(json: bool) {
 // -- State management --
 
 fn load_state() -> Option<RecordingState> {
-    let data = fs::read_to_string(STATE_FILE).ok()?;
+    let path = state_file_path();
+    let data = fs::read_to_string(path).ok()?;
     serde_json::from_str(&data).ok()
 }
 
 fn save_state(state: &RecordingState) {
-    if let Ok(data) = serde_json::to_string_pretty(state) {
-        let _ = fs::write(STATE_FILE, data);
+    let path = state_file_path();
+    // Ensure parent directory exists
+    if let Some(parent) = path.parent() {
+        if !parent.exists() {
+            if let Err(e) = fs::create_dir_all(parent) {
+                eprintln!(
+                    "Warning: failed to create state directory {}: {e}",
+                    parent.display()
+                );
+                return;
+            }
+        }
+    }
+    match serde_json::to_string_pretty(state) {
+        Ok(data) => {
+            if let Err(e) = fs::write(&path, data) {
+                eprintln!(
+                    "Warning: failed to write recording state to {}: {e}",
+                    path.display()
+                );
+            }
+        }
+        Err(e) => {
+            eprintln!("Warning: failed to serialize recording state: {e}");
+        }
     }
 }
 
 fn cleanup_state() {
-    let _ = fs::remove_file(STATE_FILE);
+    let _ = fs::remove_file(state_file_path());
 }
 
 fn cleanup_state_and_xvfb(state: &RecordingState) {

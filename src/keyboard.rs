@@ -64,7 +64,31 @@ pub fn parse_key(name: &str) -> Result<Key, String> {
         "backspace" => Ok(Key::Backspace),
         "delete" | "del" => Ok(Key::Delete),
         "space" => Ok(Key::Space),
-        "insert" => Ok(Key::Other(0xff63)), // XK_Insert
+        // Insert key: platform-specific keysym values
+        // Linux X11: XK_Insert = 0xff63
+        // macOS: NSInsertFunctionKey = 0xF727
+        // Windows: VK_INSERT = 0x2D
+        "insert" => {
+            #[cfg(target_os = "linux")]
+            {
+                Ok(Key::Other(0xff63)) // XK_Insert
+            }
+            #[cfg(target_os = "macos")]
+            {
+                Ok(Key::Other(0xF727)) // NSInsertFunctionKey
+            }
+            #[cfg(target_os = "windows")]
+            {
+                Ok(Key::Other(0x2D)) // VK_INSERT
+            }
+            #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+            {
+                Err(format!(
+                    "Insert key is not supported on this platform. Valid keys: {}",
+                    valid_key_list()
+                ))
+            }
+        }
         "home" => Ok(Key::Home),
         "end" => Ok(Key::End),
         "pageup" => Ok(Key::PageUp),

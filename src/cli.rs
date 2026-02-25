@@ -384,24 +384,24 @@ mod tests {
     fn test_parse_mouse_double_click() {
         let cli = Cli::try_parse_from(["xctrl", "mouse", "double-click"])
             .expect("should parse mouse double-click");
-        matches!(
+        assert!(matches!(
             cli.command,
             Primitive::Mouse {
                 action: MouseAction::DoubleClick { .. }
             }
-        );
+        ));
     }
 
     #[test]
     fn test_parse_mouse_right_click() {
         let cli = Cli::try_parse_from(["xctrl", "mouse", "right-click"])
             .expect("should parse mouse right-click");
-        matches!(
+        assert!(matches!(
             cli.command,
             Primitive::Mouse {
                 action: MouseAction::RightClick { .. }
             }
-        );
+        ));
     }
 
     #[test]
@@ -448,12 +448,12 @@ mod tests {
     fn test_parse_mouse_position() {
         let cli = Cli::try_parse_from(["xctrl", "mouse", "position"])
             .expect("should parse mouse position");
-        matches!(
+        assert!(matches!(
             cli.command,
             Primitive::Mouse {
                 action: MouseAction::Position
             }
-        );
+        ));
     }
 
     #[test]
@@ -544,24 +544,24 @@ mod tests {
     fn test_parse_clipboard_get() {
         let cli =
             Cli::try_parse_from(["xctrl", "clipboard", "get"]).expect("should parse clipboard get");
-        matches!(
+        assert!(matches!(
             cli.command,
             Primitive::Clipboard {
                 action: ClipboardAction::Get
             }
-        );
+        ));
     }
 
     #[test]
     fn test_parse_clipboard_clear() {
         let cli = Cli::try_parse_from(["xctrl", "clipboard", "clear"])
             .expect("should parse clipboard clear");
-        matches!(
+        assert!(matches!(
             cli.command,
             Primitive::Clipboard {
                 action: ClipboardAction::Clear
             }
-        );
+        ));
     }
 
     #[test]
@@ -638,24 +638,24 @@ mod tests {
     fn test_parse_display_info() {
         let cli =
             Cli::try_parse_from(["xctrl", "display", "info"]).expect("should parse display info");
-        matches!(
+        assert!(matches!(
             cli.command,
             Primitive::Display {
                 action: DisplayAction::Info
             }
-        );
+        ));
     }
 
     #[test]
     fn test_parse_display_list() {
         let cli =
             Cli::try_parse_from(["xctrl", "display", "list"]).expect("should parse display list");
-        matches!(
+        assert!(matches!(
             cli.command,
             Primitive::Display {
                 action: DisplayAction::List
             }
-        );
+        ));
     }
 
     #[test]
@@ -714,40 +714,40 @@ mod tests {
     fn test_parse_screen_record_stop() {
         let cli = Cli::try_parse_from(["xctrl", "screen", "record", "stop"])
             .expect("should parse screen record stop");
-        matches!(
+        assert!(matches!(
             cli.command,
             Primitive::Screen {
                 action: ScreenAction::Record {
                     action: RecordAction::Stop
                 }
             }
-        );
+        ));
     }
 
     #[test]
     fn test_parse_screen_record_status() {
         let cli = Cli::try_parse_from(["xctrl", "screen", "record", "status"])
             .expect("should parse screen record status");
-        matches!(
+        assert!(matches!(
             cli.command,
             Primitive::Screen {
                 action: ScreenAction::Record {
                     action: RecordAction::Status
                 }
             }
-        );
+        ));
     }
 
     #[test]
     fn test_parse_window_list() {
         let cli =
             Cli::try_parse_from(["xctrl", "window", "list"]).expect("should parse window list");
-        matches!(
+        assert!(matches!(
             cli.command,
             Primitive::Window {
                 action: WindowAction::List
             }
-        );
+        ));
     }
 
     #[test]
@@ -831,36 +831,36 @@ mod tests {
     fn test_parse_window_minimize() {
         let cli = Cli::try_parse_from(["xctrl", "window", "minimize", "--title", "MyWin"])
             .expect("should parse window minimize");
-        matches!(
+        assert!(matches!(
             cli.command,
             Primitive::Window {
                 action: WindowAction::Minimize { .. }
             }
-        );
+        ));
     }
 
     #[test]
     fn test_parse_window_maximize() {
         let cli = Cli::try_parse_from(["xctrl", "window", "maximize", "--id", "999"])
             .expect("should parse window maximize");
-        matches!(
+        assert!(matches!(
             cli.command,
             Primitive::Window {
                 action: WindowAction::Maximize { .. }
             }
-        );
+        ));
     }
 
     #[test]
     fn test_parse_window_fullscreen() {
         let cli = Cli::try_parse_from(["xctrl", "window", "fullscreen", "--title", "MyWin"])
             .expect("should parse window fullscreen");
-        matches!(
+        assert!(matches!(
             cli.command,
             Primitive::Window {
                 action: WindowAction::Fullscreen { .. }
             }
-        );
+        ));
     }
 
     #[test]
@@ -912,24 +912,24 @@ mod tests {
     fn test_parse_os_frontmost_app() {
         let cli = Cli::try_parse_from(["xctrl", "os", "frontmost-app"])
             .expect("should parse os frontmost-app");
-        matches!(
+        assert!(matches!(
             cli.command,
             Primitive::Os {
                 action: OsAction::FrontmostApp
             }
-        );
+        ));
     }
 
     #[test]
     fn test_parse_os_list_apps() {
         let cli =
             Cli::try_parse_from(["xctrl", "os", "list-apps"]).expect("should parse os list-apps");
-        matches!(
+        assert!(matches!(
             cli.command,
             Primitive::Os {
                 action: OsAction::ListApps
             }
-        );
+        ));
     }
 
     #[test]

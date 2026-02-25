@@ -44,6 +44,13 @@ fn cleanup_recording_state() {
         .output();
     // Give FFmpeg time to shut down
     std::thread::sleep(std::time::Duration::from_millis(500));
+    // Remove state file from new location (~/.xctrl/recording.json) and legacy location
+    if let Some(home) = std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE")) {
+        let state_path = std::path::PathBuf::from(home)
+            .join(".xctrl")
+            .join("recording.json");
+        let _ = std::fs::remove_file(state_path);
+    }
     let _ = std::fs::remove_file("/tmp/xctrl-recording.json");
 }
 

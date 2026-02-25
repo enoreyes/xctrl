@@ -130,24 +130,10 @@ pub fn handle_clipboard(action: ClipboardAction, json: bool) {
             }
         }
         ClipboardAction::Clear => {
-            // On Linux, clearing the clipboard means setting empty text via daemon
-            // so the clipboard is consistently managed
-            #[cfg(target_os = "linux")]
-            {
-                // Setting empty text effectively clears it
-                let mut clipboard = create_clipboard(json);
-                if let Err(e) = clipboard.clear() {
-                    let err = XctrlError::new(format!("Failed to clear clipboard: {e}"));
-                    exit_with_error(&err, json, 1);
-                }
-            }
-            #[cfg(not(target_os = "linux"))]
-            {
-                let mut clipboard = create_clipboard(json);
-                if let Err(e) = clipboard.clear() {
-                    let err = XctrlError::new(format!("Failed to clear clipboard: {e}"));
-                    exit_with_error(&err, json, 1);
-                }
+            let mut clipboard = create_clipboard(json);
+            if let Err(e) = clipboard.clear() {
+                let err = XctrlError::new(format!("Failed to clear clipboard: {e}"));
+                exit_with_error(&err, json, 1);
             }
         }
     }
