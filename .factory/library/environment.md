@@ -27,3 +27,7 @@ Environment variables, external dependencies, and setup notes.
   - Windows: `-f gdigrab -i desktop`
 - `Xvfb` — Virtual framebuffer for headless Linux. Started automatically by xctrl when no DISPLAY detected.
 - `gh` — GitHub CLI for pushing code and managing CI workflows.
+
+## Known Environment Quirks
+- `libxdo-devel` is NOT available in Amazon Linux 2023 repos — enigo's default x11rb backend works correctly instead
+- **Xvfb cursor reset**: Xvfb resets cursor position to screen center when ALL X11 client connections close. Cursor position doesn't persist between separate xctrl CLI invocations unless a background X11 client keeps a connection alive. In real desktop environments this isn't an issue (WM/compositor always maintains a connection). Integration tests use a Python-based X11 keepalive and file locking to work around this. Future workers/CI should start a persistent X11 client alongside Xvfb.

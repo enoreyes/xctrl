@@ -27,8 +27,8 @@ enigo.key(Key::Unicode('c'), Direction::Click)?;
 enigo.key(Key::Control, Direction::Release)?;
 ```
 
-**Linux feature flag:** `enigo = { version = "0.6", features = ["xdo"] }`
-**Requires:** `libxdo-devel` system package on Linux
+**Linux note:** enigo's default x11rb backend works well. The `xdo` feature requires `libxdo-devel` which is not available on Amazon Linux 2023.
+**IMPORTANT:** enigo's `move_mouse` uses xtest_fake_input which does NOT reliably persist cursor position in Xvfb. For reliable cursor movement on headless Linux, use `x11rb`'s `warp_pointer` directly instead.
 
 ## arboard 3.6.x (Clipboard)
 ```rust
