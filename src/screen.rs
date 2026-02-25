@@ -234,6 +234,8 @@ fn start_recording_macos(output: &str, framerate: u32, json: bool) {
 
 #[cfg(target_os = "windows")]
 fn start_recording_windows(output: &str, framerate: u32, json: bool) {
+    use std::os::windows::process::CommandExt;
+
     let args = build_ffmpeg_args_windows(framerate, output);
 
     match Command::new("ffmpeg")
@@ -654,9 +656,10 @@ fn get_display_resolution(display: &str) -> Option<String> {
 mod tests {
     use super::*;
 
-    // -- FFmpeg command construction tests --
+    // -- FFmpeg command construction tests (Linux only) --
 
     #[test]
+    #[cfg(target_os = "linux")]
     fn test_build_ffmpeg_args_linux() {
         let args = build_ffmpeg_args_linux(":0", "1920x1080", 30, "/tmp/out.mp4");
         assert!(args.contains(&"-f".to_string()));
@@ -677,6 +680,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(target_os = "linux")]
     fn test_build_ffmpeg_args_linux_custom_framerate() {
         let args = build_ffmpeg_args_linux(":99", "1280x720", 60, "/tmp/rec.mp4");
         assert!(args.contains(&"60".to_string()));
@@ -685,6 +689,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(target_os = "linux")]
     fn test_build_ffmpeg_args_linux_custom_display() {
         let args = build_ffmpeg_args_linux(":42", "1920x1080", 30, "/tmp/rec.mp4");
         let i_idx = args.iter().position(|a| a == "-i").unwrap();
@@ -790,9 +795,10 @@ mod tests {
         assert!(json_str.contains("\"pid\""));
     }
 
-    // -- Headless detection tests --
+    // -- Headless detection tests (Linux only) --
 
     #[test]
+    #[cfg(target_os = "linux")]
     fn test_find_free_display() {
         let display_num = find_free_display();
         assert!(display_num >= 50);

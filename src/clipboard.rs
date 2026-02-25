@@ -11,6 +11,7 @@ pub struct ClipboardText {
 
 /// Internal argument used to signal a daemonized clipboard-holding process.
 /// This should never be passed by users directly.
+#[cfg(target_os = "linux")]
 const DAEMON_ARG: &str = "__clipboard_daemon";
 
 /// Create a new arboard Clipboard instance, exiting with a clear error if it fails.
@@ -90,6 +91,7 @@ pub fn run_clipboard_daemon(text: &str) {
 
 /// Check if the current process was invoked as a clipboard daemon.
 /// Returns Some(text) if it was, None otherwise.
+#[cfg(target_os = "linux")]
 pub fn check_daemon_args(args: &[String]) -> Option<String> {
     if args.len() >= 2 && args[1] == DAEMON_ARG {
         Some(args.get(2).cloned().unwrap_or_default())
@@ -173,6 +175,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(target_os = "linux")]
     fn test_check_daemon_args_with_daemon_flag() {
         let args = vec![
             "xctrl".to_string(),
@@ -184,6 +187,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(target_os = "linux")]
     fn test_check_daemon_args_without_daemon_flag() {
         let args = vec![
             "xctrl".to_string(),
@@ -195,6 +199,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(target_os = "linux")]
     fn test_check_daemon_args_empty() {
         let args = vec!["xctrl".to_string()];
         let result = check_daemon_args(&args);
@@ -202,6 +207,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(target_os = "linux")]
     fn test_check_daemon_args_daemon_without_text() {
         let args = vec!["xctrl".to_string(), DAEMON_ARG.to_string()];
         let result = check_daemon_args(&args);

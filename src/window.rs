@@ -54,6 +54,7 @@ pub fn handle_window(action: WindowAction, json: bool) {
 
 // ── Target resolution ───────────────────────────────────────────────────────
 
+#[allow(dead_code)]
 enum WindowTarget {
     Title(String),
     Id(String),
