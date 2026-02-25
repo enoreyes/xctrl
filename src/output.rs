@@ -23,6 +23,7 @@ pub fn print_text(text: &str) {
 }
 
 /// Print a "not yet implemented" message and exit with code 1.
+#[allow(dead_code)]
 pub fn not_yet_implemented(command: &str, json: bool) -> ! {
     let err = XctrlError::with_hint(
         format!("{command}: not yet implemented"),

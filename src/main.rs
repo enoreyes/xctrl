@@ -4,6 +4,7 @@ mod display;
 mod error;
 mod keyboard;
 mod mouse;
+mod os_actions;
 mod output;
 mod screen;
 mod window;
@@ -50,11 +51,5 @@ fn handle_window(action: WindowAction, json: bool) {
 }
 
 fn handle_os(action: OsAction, json: bool) {
-    match action {
-        OsAction::OpenUrl { .. } => output::not_yet_implemented("os open-url", json),
-        OsAction::OpenApp { .. } => output::not_yet_implemented("os open-app", json),
-        OsAction::Notify { .. } => output::not_yet_implemented("os notify", json),
-        OsAction::FrontmostApp => output::not_yet_implemented("os frontmost-app", json),
-        OsAction::ListApps => output::not_yet_implemented("os list-apps", json),
-    }
+    os_actions::handle_os(action, json);
 }
