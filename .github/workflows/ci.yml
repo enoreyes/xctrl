@@ -116,7 +116,7 @@ jobs:
       - name: Build
         run: cargo build
 
-      # ── Tests ───────────────────────────────────────────────────
+      # ── Tests (unit + integration + e2e) ─────────────────────────
       - name: Run tests (Linux — with Xvfb)
         if: runner.os == 'Linux'
         run: |
@@ -127,7 +127,7 @@ jobs:
 
           export DISPLAY=:99
 
-          # Run tests with a timeout to prevent CI hangs
+          # Run all tests (unit, integration, and e2e) with a timeout
           timeout 600 cargo test -- --test-threads=2 || TEST_EXIT=$?
 
           kill $XVFB_PID 2>/dev/null || true
@@ -137,6 +137,7 @@ jobs:
       - name: Run tests (macOS)
         if: runner.os == 'macOS'
         run: cargo test -- --test-threads=2
+        timeout-minutes: 15
 
       - name: Run tests (Windows)
         if: runner.os == 'Windows'
