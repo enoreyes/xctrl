@@ -221,7 +221,7 @@ Test screen recording lifecycle (start, status, stop) via CLI. Recording command
 **Xvfb setup:** Xvfb is already running on display :99. Always prefix commands with `DISPLAY=:99` for start/status (stop reads from state file).
 
 **CRITICAL isolation rules:**
-- Screen recording uses a SHARED state file (`/tmp/xctrl-recording.json` or `~/.xctrl/recording.json`) 
+- Screen recording uses a SHARED state file (`~/.xctrl/recording.json`) 
 - Only ONE subagent may test recording at a time - recording tests MUST be sequential
 - Each test run should clean up: ensure recording is stopped before starting a new one
 - Use unique output file paths for each test: `/tmp/test_rec_<test_name>.mp4`
