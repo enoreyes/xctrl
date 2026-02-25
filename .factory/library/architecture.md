@@ -57,6 +57,7 @@ src/
 All commands that return data support `--json`. Without the flag, output is human-readable text. With the flag, output is valid JSON to stdout. Errors always go to stderr.
 
 ## Error Handling
-- Use `anyhow` for error propagation
+- Use `exit_with_error(message, hint, json_mode)` for user-facing errors — prints to stderr and exits 1
 - Display errors include remediation hints (e.g., missing ffmpeg)
-- Exit codes: 0 = success, 1 = error, 2 = missing dependency
+- Exit codes: 0 = success, 1 = all errors (including missing dependencies)
+- Do NOT use anyhow::Result in command handlers — the exit_with_error pattern is the established convention
