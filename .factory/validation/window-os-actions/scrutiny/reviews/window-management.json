@@ -1,0 +1,45 @@
+{
+  "featureId": "window-management",
+  "reviewedAt": "2026-02-25T08:30:00.000Z",
+  "commitId": "860bfc0",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "Solid implementation of all 7 window management actions (list, focus, resize, move, minimize, maximize, fullscreen) using x11rb for Linux EWMH protocol. All manipulation commands support both --title and --id targeting. Error handling follows the established exit_with_error pattern consistently. JSON output uses snake_case keys. Platform stubs provided for macOS and Windows. 21 integration tests + 3 unit tests cover CLI parsing, JSON output format, window-not-found errors, and help output. Code is well-structured with a clean X11Conn abstraction and proper EWMH message sending.",
+    "issues": [
+      {
+        "file": "tests/window_test.rs",
+        "line": 303,
+        "severity": "non_blocking",
+        "description": "test_window_focus_requires_title_or_id unnecessarily requires DISPLAY. The resolve_target function calls exit_with_error before any X11 connection is made, so this test would work without a display. The has_display() guard makes this test skip in CI environments without X11, reducing coverage unnecessarily."
+      },
+      {
+        "file": "src/window.rs",
+        "line": 221,
+        "severity": "non_blocking",
+        "description": "find_window by --id uses get_window_attributes which can succeed for non-client windows (e.g., root window or internal X11 windows). It would be more robust to check against _NET_CLIENT_LIST first, similar to the title-based lookup. Low practical risk for a CLI tool."
+      },
+      {
+        "file": "src/window.rs",
+        "line": 275,
+        "severity": "non_blocking",
+        "description": "Each platform function (focus_window, resize_window, etc.) creates a new X11Conn, establishing a fresh X11 connection per call. For a CLI tool that does one operation per invocation this is acceptable, but the find+action pattern means two connections are created (one in find_window, one in the action) — actually the worker correctly creates one connection per public function call since find is called within the same X11Conn. No issue here on closer inspection."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "AGENTS.md line 29 says 'Keep platform code in src/platform/ module' but the actual established convention (documented in architecture.md and followed by all existing primitives including mouse.rs, window.rs) is to use inline #[cfg(target_os)] blocks within each module file, organized via inner 'mod platform { }' blocks. This contradictory guidance could confuse future workers.",
+      "evidence": "AGENTS.md line 29: 'Keep platform code in `src/platform/` module' vs architecture.md: 'Platform-specific code uses inline #[cfg(target_os)] gates within each module (e.g., screen.rs, clipboard.rs, mouse.rs) rather than a separate src/platform/ directory. This is the established convention.'"
+    },
+    {
+      "area": "conventions",
+      "observation": "architecture.md lists 'x-win 5.x' as the crate for window listing, but the worker correctly chose to use x11rb directly (already a dependency) instead of adding x-win which has heavy transitive dependencies. architecture.md should be updated to reflect that window listing on Linux uses x11rb's _NET_CLIENT_LIST rather than x-win.",
+      "evidence": "Cargo.toml has no x-win dependency. architecture.md Key Crates table says 'Window listing | x-win 5.x | Cross-platform read-only window info'. Worker's skillFeedback.suggestedChanges documents this deviation."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "The window-management feature passes review. All 7 actions are correctly implemented with proper EWMH protocol usage on Linux, consistent error handling via exit_with_error, and comprehensive test coverage (24 tests total). The worker made a justified deviation from the spec by using x11rb directly instead of x-win for window listing, avoiding heavy dependency bloat. Two non-blocking issues noted: a test that unnecessarily requires DISPLAY, and find-by-id not checking against _NET_CLIENT_LIST. Two shared state observations about stale documentation (AGENTS.md platform code location, architecture.md x-win reference)."
+}

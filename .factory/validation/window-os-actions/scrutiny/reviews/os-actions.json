@@ -1,0 +1,51 @@
+{
+  "featureId": "os-actions",
+  "reviewedAt": "2026-02-25T08:45:00.000Z",
+  "commitId": "d7ae241",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "All 5 OS actions (open-url, open-app, notify, frontmost-app, list-apps) are implemented correctly for Linux with platform stubs for macOS and Windows. The implementation follows established project conventions: exit_with_error pattern, Serialize-derived output structs, inline #[cfg(target_os)] platform gates, snake_case JSON keys, and remediation hints on errors. The Linux implementation correctly uses X11 _NET_ACTIVE_WINDOW and _NET_CLIENT_LIST for frontmost-app and list-apps respectively, with /proc fallback for GUI process discovery. Error handling for non-existent app names produces clear messages. 6 unit tests and 19 integration tests provide good coverage of CLI parsing, JSON output format, error handling, and graceful degradation in headless environments.",
+    "issues": [
+      {
+        "file": "src/os_actions.rs",
+        "line": 140,
+        "severity": "non_blocking",
+        "description": "open_app() calls xdg-open with the app name, but xdg-open is designed for opening files/URLs, not launching applications by name. For an app name like 'firefox', xdg-open may interpret it as a filename rather than an app. The fallback to try_direct_exec (which uses 'which') mitigates this, but the xdg-open attempt may produce confusing errors or unexpected behavior (e.g., opening a file manager) before falling back."
+      },
+      {
+        "file": "src/os_actions.rs",
+        "line": 100,
+        "severity": "non_blocking",
+        "description": "In handle_frontmost_app and handle_list_apps, when serde_json::to_string_pretty fails, the fallback string {\"error\": \"JSON serialization failed: ...\"} is printed to stdout rather than stderr, which is inconsistent with the project's JSON error convention (errors to stderr). In practice this is unreachable since these simple structs will always serialize successfully."
+      },
+      {
+        "file": "src/os_actions.rs",
+        "line": 168,
+        "severity": "non_blocking",
+        "description": "Duplicated X11 helper code (intern_atom, get_window_pid, X11 connection setup) between os_actions.rs and window.rs. Both modules independently create RustConnection and implement the same atom interning pattern. This could be extracted to a shared x11_helpers module to reduce duplication."
+      },
+      {
+        "file": "src/os_actions.rs",
+        "line": 294,
+        "severity": "non_blocking",
+        "description": "macOS list_apps() parsing of osascript output uses a simplistic line-by-line split heuristic that won't correctly parse AppleScript's actual list output format (which returns comma-separated names and PIDs in brace-wrapped groups). The code has a comment acknowledging this. Acceptable for a cross-compile stub but will need proper parsing when macOS support is implemented."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "conventions",
+      "observation": "X11 helper code (intern_atom, get_window_pid, RustConnection setup) is duplicated between src/window.rs and src/os_actions.rs. AGENTS.md and architecture.md don't address shared X11 utility extraction. As more primitives use X11, this duplication will grow.",
+      "evidence": "src/os_actions.rs lines 168-200 (intern_atom, get_window_pid) duplicate equivalent functions in src/window.rs (X11Conn methods). Both create RustConnection independently."
+    },
+    {
+      "area": "skills",
+      "observation": "Worker reported followedProcedure=true with no deviations, but the transcript shows implementation was created before/alongside tests rather than strict TDD (red-green). The skill says 'Write Tests First (TDD)' and 'Run cargo test — confirm tests FAIL (red phase)'. The transcript shows the os_actions.rs implementation file was created first, then tests/os_test.rs. This is a minor deviation that didn't impact quality.",
+      "evidence": "Transcript skeleton shows: Create os_actions.rs (19101 chars), then Edit main.rs, then 'cargo build', then Create os_test.rs (11645 chars). Tests were written after implementation, not before."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "The os-actions feature passes review. All 5 required actions are implemented with correct platform-specific code for Linux (X11 + /proc), proper stubs for macOS/Windows, consistent error handling with hints, and comprehensive test coverage (6 unit + 19 integration tests). All tests pass, clippy is clean, and formatting is correct. Non-blocking issues include duplicated X11 helper code with the window module, a minor stdout/stderr inconsistency in unreachable JSON serialization fallbacks, and xdg-open being used for app launching (mitigated by try_direct_exec fallback). The macOS list_apps parsing is acknowledged as simplified but acceptable for a stub."
+}

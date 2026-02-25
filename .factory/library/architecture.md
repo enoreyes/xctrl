@@ -39,7 +39,7 @@ src/
 | Clipboard | `arboard` 3.6.x | Cross-platform. 1Password-backed |
 | Screenshots | `xcap` 0.8.x | Cross-platform. Returns `image::RgbaImage` |
 | Screen recording | FFmpeg process | Spawned via `std::process::Command` |
-| Window listing | `x-win` 5.x | Cross-platform read-only window info |
+| Window listing (Linux) | `x11rb` | Uses _NET_CLIENT_LIST EWMH property (no separate x-win dependency) |
 | Window control (Linux) | `x11rb` | EWMH/ICCCM protocols |
 | Window control (macOS) | `core-graphics` + accessibility | AXUIElement API |
 | Window control (Win) | `windows` crate | Win32 API |

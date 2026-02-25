@@ -1,0 +1,46 @@
+{
+  "milestone": "window-os-actions",
+  "round": 1,
+  "status": "pass",
+  "validatorsRun": {
+    "test": { "passed": true, "command": "cargo test -- --test-threads=2", "exitCode": 0 },
+    "typecheck": { "passed": true, "command": "cargo clippy -- -D warnings", "exitCode": 0 },
+    "lint": { "passed": true, "command": "cargo fmt --check", "exitCode": 0 }
+  },
+  "reviewsSummary": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "failedFeatures": []
+  },
+  "blockingIssues": [],
+  "appliedUpdates": [
+    {
+      "target": "library",
+      "description": "Updated architecture.md Key Crates table: replaced 'x-win 5.x' with 'x11rb (uses _NET_CLIENT_LIST)' for window listing on Linux, reflecting actual implementation that avoids the heavy x-win dependency.",
+      "sourceFeature": "window-management"
+    }
+  ],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Remove or update line 29 ('Keep platform code in src/platform/ module') to match the actual convention: inline #[cfg(target_os)] blocks within each module file. architecture.md already documents this correctly. The contradictory guidance in AGENTS.md could confuse future workers.",
+      "evidence": "Both window-management and os-actions reviews flagged this. AGENTS.md says 'Keep platform code in src/platform/ module' but every module (mouse.rs, keyboard.rs, clipboard.rs, screen.rs, window.rs, os_actions.rs) uses inline #[cfg] blocks. architecture.md correctly documents the inline pattern as the established convention.",
+      "isSystemic": true
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Add convention guidance for extracting shared X11 helpers. Both window.rs and os_actions.rs independently implement intern_atom, get_window_pid, and X11 connection setup. Consider adding a shared src/x11_helpers.rs module and documenting this as the convention for future X11-dependent primitives.",
+      "evidence": "os-actions review found duplicated X11 code: src/os_actions.rs lines 168-200 duplicate equivalent functions in src/window.rs (intern_atom, get_window_pid, RustConnection setup). Both modules create independent X11 connections.",
+      "isSystemic": true
+    },
+    {
+      "target": "skills",
+      "suggestion": "The rust-worker skill's TDD requirement ('Write Tests First, confirm tests FAIL') is not being strictly followed. The os-actions worker wrote implementation before tests. Consider relaxing the TDD requirement to 'Write tests alongside implementation' or enforce it more explicitly, since the strict red-green-refactor cycle doesn't always fit CLI tool development where the shape of the API emerges during implementation.",
+      "evidence": "os-actions review: transcript shows Create os_actions.rs (implementation) before Create os_test.rs (tests). Worker self-reported followedProcedure=true with no deviations, but actual order contradicts the TDD step.",
+      "isSystemic": false
+    }
+  ],
+  "rejectedObservations": [],
+  "previousRound": null
+}
