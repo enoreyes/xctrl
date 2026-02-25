@@ -24,6 +24,12 @@ if command -v dnf &> /dev/null; then
         xorg-x11-server-Xvfb \
         gcc \
         pkg-config \
+        wayland-devel \
+        pipewire-devel \
+        clang-devel \
+        mesa-libEGL-devel \
+        mesa-libgbm-devel \
+        libdrm-devel \
         2>/dev/null || echo "Some packages may not be available, continuing..."
 fi
 
