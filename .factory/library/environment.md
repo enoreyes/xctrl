@@ -19,6 +19,10 @@ Environment variables, external dependencies, and setup notes.
 - `xorg-x11-server-Xvfb` — Virtual framebuffer for headless testing
 - `ffmpeg` — Required for screen recording
 - `gcc`, `pkg-config` — Build essentials
+- `wayland-devel`, `wayland-protocols-devel` — Required by `xcap` crate (wayland-sys)
+- `pipewire-devel` — Required by `xcap` crate (libspa-sys, pipewire-sys)
+- `clang-devel`, `clang-libs` — Required by `bindgen` (used by libspa-sys build)
+- `mesa-libEGL-devel`, `mesa-libgbm-devel`, `libdrm-devel` — Required by `xcap` crate (khronos-egl, gbm, drm)
 
 ## External Tools
 - `ffmpeg` — Must be on PATH for screen recording. Platform-specific capture devices:
