@@ -59,3 +59,23 @@ cargo run -- clipboard get
 - Mouse events in Xvfb work but there's nothing visual to click on
 - Clipboard requires a running X server (Xvfb counts)
 - Screen recording in Xvfb records a blank/static display unless apps are running
+
+## Flow Validator Guidance: CLI
+
+xctrl is a stateless CLI tool. Each command invocation is independent. Testing is done by:
+1. Running `cargo run -- <args>` from `/home/ec2-user/code/work/xctrl`
+2. Checking exit code
+3. Checking stdout/stderr output
+4. For JSON mode, piping through `python3 -m json.tool` to validate
+
+**Xvfb setup:** Xvfb is already running on display :99. Always set `DISPLAY=:99` before running display-dependent commands (mouse, keyboard, clipboard, display, window).
+
+**Isolation rules for parallel subagents:**
+- CLI framework tests (--help, --version, error handling) don't affect shared state - fully safe to parallelize
+- Mouse tests use the shared Xvfb cursor - run mouse position verification quickly to avoid races with other subagents. Each mouse subagent should own the cursor exclusively for its test window.
+- Clipboard tests share a single X11 clipboard - ONLY ONE subagent should test clipboard at a time, or clipboard tests should be in a single subagent group.
+- Keyboard tests produce keystrokes into Xvfb - safe in isolation since there's no target window to receive them
+
+**Binary path:** Use `cargo run --` for all tests (from the repo root). This ensures the latest build is used.
+
+**Environment:** Source `$HOME/.cargo/env` before running cargo commands if needed.
