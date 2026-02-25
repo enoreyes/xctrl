@@ -30,4 +30,5 @@ Environment variables, external dependencies, and setup notes.
 
 ## Known Environment Quirks
 - `libxdo-devel` is NOT available in Amazon Linux 2023 repos — enigo's default x11rb backend works correctly instead
+- **X11 clipboard ownership**: On X11, clipboard contents are owned by the setting process. When a CLI tool sets clipboard text and exits, the data is lost. The arboard crate's `SetExtLinux::wait()` daemon pattern must be used — it spawns a background process that holds clipboard ownership until another process overwrites the clipboard. This is a fundamental constraint of the X11 selection model, not a bug.
 - **Xvfb cursor reset**: Xvfb resets cursor position to screen center when ALL X11 client connections close. Cursor position doesn't persist between separate xctrl CLI invocations unless a background X11 client keeps a connection alive. In real desktop environments this isn't an issue (WM/compositor always maintains a connection). Integration tests use a Python-based X11 keepalive and file locking to work around this. Future workers/CI should start a persistent X11 client alongside Xvfb.
