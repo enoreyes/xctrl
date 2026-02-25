@@ -1,4 +1,5 @@
 mod cli;
+mod clipboard;
 mod error;
 mod keyboard;
 mod mouse;
@@ -6,28 +7,32 @@ mod output;
 
 use clap::Parser;
 
-use cli::{Cli, ClipboardAction, DisplayAction, OsAction, Primitive, ScreenAction, WindowAction};
+use cli::{Cli, DisplayAction, OsAction, Primitive, ScreenAction, WindowAction};
 
 fn main() {
+    // Check if we're running as a clipboard daemon (Linux only).
+    // This must happen before clap parses args, because the daemon
+    // uses a special internal argument that isn't a valid CLI command.
+    #[cfg(target_os = "linux")]
+    {
+        let args: Vec<String> = std::env::args().collect();
+        if let Some(text) = clipboard::check_daemon_args(&args) {
+            clipboard::run_clipboard_daemon(&text);
+            return;
+        }
+    }
+
     let cli = Cli::parse();
     let json = cli.json;
 
     match cli.command {
         Primitive::Mouse { action } => mouse::handle_mouse(action, json),
         Primitive::Keyboard { action } => keyboard::handle_keyboard(action, json),
-        Primitive::Clipboard { action } => handle_clipboard(action, json),
+        Primitive::Clipboard { action } => clipboard::handle_clipboard(action, json),
         Primitive::Display { action } => handle_display(action, json),
         Primitive::Screen { action } => handle_screen(action, json),
         Primitive::Window { action } => handle_window(action, json),
         Primitive::Os { action } => handle_os(action, json),
-    }
-}
-
-fn handle_clipboard(action: ClipboardAction, json: bool) {
-    match action {
-        ClipboardAction::Set { .. } => output::not_yet_implemented("clipboard set", json),
-        ClipboardAction::Get => output::not_yet_implemented("clipboard get", json),
-        ClipboardAction::Clear => output::not_yet_implemented("clipboard clear", json),
     }
 }
 
