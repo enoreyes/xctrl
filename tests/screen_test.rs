@@ -6,15 +6,7 @@ static RECORDING_LOCK: Mutex<()> = Mutex::new(());
 
 /// Get the path to the xctrl binary.
 fn xctrl_bin() -> String {
-    // Use cargo to find the binary path
-    let output = Command::new("cargo")
-        .args(["build", "--message-format=short"])
-        .output()
-        .expect("cargo build failed");
-    assert!(output.status.success(), "cargo build failed");
-
-    let manifest_dir = env!("CARGO_MANIFEST_DIR");
-    format!("{manifest_dir}/target/debug/xctrl")
+    env!("CARGO_BIN_EXE_xctrl").to_string()
 }
 
 /// Check if Xvfb is running or DISPLAY is available.

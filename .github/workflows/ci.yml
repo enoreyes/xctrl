@@ -13,6 +13,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -59,6 +60,7 @@ jobs:
   build-test:
     name: Build & Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -100,7 +102,8 @@ jobs:
             libdrm-dev \
             pkg-config \
             xvfb \
-            ffmpeg
+            ffmpeg \
+            xdotool
 
       # ── macOS dependencies ──────────────────────────────────────
       # Most macOS deps are available via system frameworks.
@@ -120,12 +123,16 @@ jobs:
           # Start Xvfb on display :99
           Xvfb :99 -screen 0 1920x1080x24 -ac &
           XVFB_PID=$!
-          sleep 1
+          sleep 2
 
           export DISPLAY=:99
-          cargo test -- --test-threads=2
+
+          # Run tests with a timeout to prevent CI hangs
+          timeout 600 cargo test -- --test-threads=2 || TEST_EXIT=$?
 
           kill $XVFB_PID 2>/dev/null || true
+
+          exit ${TEST_EXIT:-0}
 
       - name: Run tests (macOS)
         if: runner.os == 'macOS'
