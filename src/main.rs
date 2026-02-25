@@ -1,5 +1,6 @@
 mod cli;
 mod clipboard;
+mod display;
 mod error;
 mod keyboard;
 mod mouse;
@@ -7,7 +8,7 @@ mod output;
 
 use clap::Parser;
 
-use cli::{Cli, DisplayAction, OsAction, Primitive, ScreenAction, WindowAction};
+use cli::{Cli, OsAction, Primitive, ScreenAction, WindowAction};
 
 fn main() {
     // Check if we're running as a clipboard daemon (Linux only).
@@ -29,18 +30,10 @@ fn main() {
         Primitive::Mouse { action } => mouse::handle_mouse(action, json),
         Primitive::Keyboard { action } => keyboard::handle_keyboard(action, json),
         Primitive::Clipboard { action } => clipboard::handle_clipboard(action, json),
-        Primitive::Display { action } => handle_display(action, json),
+        Primitive::Display { action } => display::handle_display(action, json),
         Primitive::Screen { action } => handle_screen(action, json),
         Primitive::Window { action } => handle_window(action, json),
         Primitive::Os { action } => handle_os(action, json),
-    }
-}
-
-fn handle_display(action: DisplayAction, json: bool) {
-    match action {
-        DisplayAction::Screenshot { .. } => output::not_yet_implemented("display screenshot", json),
-        DisplayAction::Info => output::not_yet_implemented("display info", json),
-        DisplayAction::List => output::not_yet_implemented("display list", json),
     }
 }
 
