@@ -1,14 +1,12 @@
 mod cli;
 mod error;
+mod keyboard;
 mod mouse;
 mod output;
 
 use clap::Parser;
 
-use cli::{
-    Cli, ClipboardAction, DisplayAction, KeyboardAction, OsAction, Primitive, ScreenAction,
-    WindowAction,
-};
+use cli::{Cli, ClipboardAction, DisplayAction, OsAction, Primitive, ScreenAction, WindowAction};
 
 fn main() {
     let cli = Cli::parse();
@@ -16,22 +14,12 @@ fn main() {
 
     match cli.command {
         Primitive::Mouse { action } => mouse::handle_mouse(action, json),
-        Primitive::Keyboard { action } => handle_keyboard(action, json),
+        Primitive::Keyboard { action } => keyboard::handle_keyboard(action, json),
         Primitive::Clipboard { action } => handle_clipboard(action, json),
         Primitive::Display { action } => handle_display(action, json),
         Primitive::Screen { action } => handle_screen(action, json),
         Primitive::Window { action } => handle_window(action, json),
         Primitive::Os { action } => handle_os(action, json),
-    }
-}
-
-fn handle_keyboard(action: KeyboardAction, json: bool) {
-    match action {
-        KeyboardAction::Type { .. } => output::not_yet_implemented("keyboard type", json),
-        KeyboardAction::Press { .. } => output::not_yet_implemented("keyboard press", json),
-        KeyboardAction::Hotkey { .. } => output::not_yet_implemented("keyboard hotkey", json),
-        KeyboardAction::KeyDown { .. } => output::not_yet_implemented("keyboard key-down", json),
-        KeyboardAction::KeyUp { .. } => output::not_yet_implemented("keyboard key-up", json),
     }
 }
 
