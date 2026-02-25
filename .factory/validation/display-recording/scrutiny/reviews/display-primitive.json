@@ -1,0 +1,56 @@
+{
+  "featureId": "display-primitive",
+  "reviewedAt": "2026-02-25T08:15:00.000Z",
+  "commitId": "370dddcc8a5ef96695d3b21d8fcc4a81a40bb921",
+  "transcriptSkeletonReviewed": true,
+  "diffReviewed": true,
+  "status": "pass",
+  "codeReview": {
+    "summary": "Solid implementation of display primitive with 3 actions (screenshot, info, list) using xcap crate. Code follows project conventions: no unwrap() in production code, proper error handling with XctrlError and exit_with_error, serde Serialize on output structs, snake_case JSON keys. Region screenshot correctly validates zero-width/height, bounds-checks origin against screen dimensions, and clamps region to screen bounds. Helper functions for monitor property access properly handle xcap 0.8.x Result-returning API. 19 tests cover CLI parsing, JSON format, error cases, and file creation with Xvfb. Minor issues are all non-blocking.",
+    "issues": [
+      {
+        "file": "tests/display_test.rs",
+        "line": 73,
+        "severity": "non_blocking",
+        "description": "test_display_screenshot_nonexistent_directory_error unnecessarily guards on has_display(). The directory validation in handle_screenshot (display.rs:50-57) happens BEFORE any xcap::Monitor::all() call, so this test should pass without a DISPLAY set. Same applies to the _json variant at line 93. These tests will be skipped unnecessarily in no-display CI environments."
+      },
+      {
+        "file": "src/display.rs",
+        "line": 228,
+        "severity": "non_blocking",
+        "description": "handle_list does its own JSON serialization (serde_json::to_string_pretty + println) rather than using the project's print_success utility. handle_info at line 199 uses print_success. Minor inconsistency — functionally identical but slightly different code path for serialization errors (print_success prints to stderr on error, handle_list uses exit_with_error)."
+      },
+      {
+        "file": "tests/display_test.rs",
+        "line": 281,
+        "severity": "non_blocking",
+        "description": "No test for screenshot JSON success output format. test_display_screenshot_creates_file verifies the PNG file is created but doesn't test with --json flag to verify the JSON stdout contains path, width, height fields. This is a minor gap in JSON output contract coverage for the screenshot action specifically."
+      },
+      {
+        "file": "src/display.rs",
+        "line": 66,
+        "severity": "non_blocking",
+        "description": "Feature description says 'invalid region dimensions (0 or negative) produce clear error' but since width/height are Option<u32>, negative values are caught by clap's generic argument parsing error (not the custom dimension validator). The error message for negative input will be a clap parse error rather than a domain-specific 'invalid region' message. This is acceptable since u32 naturally prevents negatives, but the user experience differs from the specified behavior."
+      }
+    ]
+  },
+  "sharedStateObservations": [
+    {
+      "area": "knowledge",
+      "observation": "rust-crates.md documents xcap 0.8.x Monitor methods as returning direct values (e.g., primary.width(), primary.name()) but the actual xcap 0.8.2 API returns Result types. Worker had to discover this and created 6 helper wrapper functions. The library doc should be updated to show the Result-returning signatures.",
+      "evidence": "rust-crates.md shows 'let width = primary.width();' but worker's code in src/display.rs:256-290 uses 'match m.width() { Ok(w) => w, Err(e) => ... }'. Worker noted this in handoff.skillFeedback.suggestedChanges."
+    },
+    {
+      "area": "conventions",
+      "observation": "AGENTS.md says 'Use anyhow::Result for error propagation in main/commands' but the actual codebase pattern uses exit_with_error() with process::exit() in handler functions that return () or !. All existing primitives (mouse, keyboard, clipboard, display) follow this pattern. The documented convention doesn't match reality.",
+      "evidence": "AGENTS.md Coding Conventions section vs src/display.rs, src/mouse.rs, src/keyboard.rs, src/clipboard.rs — all use exit_with_error() pattern, none use anyhow::Result in handler functions."
+    },
+    {
+      "area": "conventions",
+      "observation": "Worker discovered that xcap requires several system dependencies not documented in init.sh: wayland-devel, pipewire-devel, clang-devel, mesa-libEGL-devel, mesa-libgbm-devel, libdrm-devel. Worker updated environment.md but noted init.sh may need updating.",
+      "evidence": "Handoff discoveredIssues[0]: 'xcap 0.8.x requires several system dependencies not in init.sh'. Commit cfddfe2 (separate from main feature commit 370dddc) updated environment docs."
+    }
+  ],
+  "addressesFailureFrom": null,
+  "summary": "PASS. The display primitive implementation is well-structured and complete. All 3 actions (screenshot, info, list) work correctly with both human-readable and JSON output modes. Error handling is thorough: non-existent directories, zero-dimension regions, out-of-bounds regions, missing displays, and monitor property access failures all produce clear errors with remediation hints. No unwrap() in production code. 19 tests provide good coverage of CLI parsing, JSON output format, error conditions, and screenshot file creation. Four non-blocking issues identified: (1) two error-handling tests unnecessarily require DISPLAY, (2) minor inconsistency in JSON serialization approach between list and info, (3) missing test for screenshot JSON success output, (4) negative region dimensions produce clap parse errors rather than domain-specific messages."
+}

@@ -20,19 +20,16 @@ src/
 ├── cli.rs           # CLI argument parsing (clap derive)
 ├── output.rs        # JSON/text output formatting
 ├── error.rs         # Error types and display
-├── mouse.rs         # Mouse primitive
+├── mouse.rs         # Mouse primitive (inline #[cfg] for platform code)
 ├── keyboard.rs      # Keyboard primitive
-├── clipboard.rs     # Clipboard primitive
+├── clipboard.rs     # Clipboard primitive (inline #[cfg] for platform code)
 ├── display.rs       # Display/screenshot primitive
-├── screen.rs        # Screen recording primitive
+├── screen.rs        # Screen recording primitive (inline #[cfg] for platform code)
 ├── window.rs        # Window management primitive
-├── os_actions.rs    # OS-level actions primitive
-└── platform/        # Platform-specific implementations
-    ├── mod.rs
-    ├── linux.rs
-    ├── macos.rs
-    └── windows.rs
+└── os_actions.rs    # OS-level actions primitive
 ```
+
+**Note:** Platform-specific code uses inline `#[cfg(target_os = "...")]` blocks within each module rather than a separate `platform/` directory.
 
 ## Key Crates
 | Function | Crate | Notes |
@@ -53,7 +50,7 @@ src/
 ## Platform Abstraction
 - Use `#[cfg(target_os = "linux")]`, `#[cfg(target_os = "macos")]`, `#[cfg(target_os = "windows")]`
 - Prefer cross-platform crates (enigo, arboard, xcap, x-win) over platform-specific code
-- Platform-specific code goes in `src/platform/` module
+- Platform-specific code uses inline `#[cfg(target_os)]` gates within each module (e.g., `screen.rs`, `clipboard.rs`, `mouse.rs`) rather than a separate `src/platform/` directory. This is the established convention — all existing primitives follow this pattern.
 - Window control is the most platform-specific area
 
 ## JSON Output Convention

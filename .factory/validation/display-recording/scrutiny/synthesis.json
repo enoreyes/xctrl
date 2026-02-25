@@ -1,0 +1,56 @@
+{
+  "milestone": "display-recording",
+  "round": 1,
+  "status": "pass",
+  "validatorsRun": {
+    "test": { "passed": true, "command": "cargo test -- --test-threads=2", "exitCode": 0 },
+    "clippy": { "passed": true, "command": "cargo clippy -- -D warnings", "exitCode": 0 },
+    "fmt": { "passed": true, "command": "cargo fmt --check", "exitCode": 0 }
+  },
+  "reviewsSummary": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "failedFeatures": []
+  },
+  "blockingIssues": [],
+  "appliedUpdates": [
+    {
+      "target": "library",
+      "description": "Updated rust-crates.md to document that xcap 0.8.x monitor property accessors (name, width, height, x, y, scale_factor) return Result types, not direct values. Previous documentation showed direct value access which was incorrect.",
+      "sourceFeature": "display-primitive"
+    },
+    {
+      "target": "library",
+      "description": "Updated architecture.md to reflect that platform-specific code uses inline #[cfg(target_os)] gates within each module rather than a separate src/platform/ directory. Removed non-existent platform/ directory from module layout. This matches the actual codebase convention used by all existing primitives.",
+      "sourceFeature": "screen-recording"
+    }
+  ],
+  "suggestedGuidanceUpdates": [
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Update the error handling convention: AGENTS.md says 'Use anyhow::Result for error propagation in main/commands' but all existing primitives (mouse, keyboard, clipboard, display, screen) use the exit_with_error() pattern with process::exit() in handler functions that return (). The documented convention should be updated to match the actual pattern: 'Use XctrlError with exit_with_error() in command handler functions. The anyhow::Result pattern is not used.'",
+      "evidence": "display-primitive reviewer found that src/display.rs, src/mouse.rs, src/keyboard.rs, src/clipboard.rs, src/screen.rs all use exit_with_error() pattern. None use anyhow::Result in handler functions.",
+      "isSystemic": true
+    },
+    {
+      "target": "AGENTS.md",
+      "suggestion": "Clarify exit code convention: architecture.md specifies 'Exit codes: 0 = success, 1 = error, 2 = missing dependency' but the implementation uses exit code 1 for all errors including missing dependencies (e.g., FFmpeg not found). Either update the convention to use exit code 1 for everything, or update the code to use exit code 2 for missing dependencies.",
+      "evidence": "screen-recording reviewer found src/screen.rs uses exit code 1 for FFmpeg-not-found errors. All other error paths also use exit code 1.",
+      "isSystemic": true
+    },
+    {
+      "target": "skills",
+      "suggestion": "Add nuance to rust-worker skill's 'Write Tests First' (TDD red-phase) step: for system integration features (process management, FFmpeg invocation, state file persistence), writing tests alongside implementation is more practical than strict test-first. Note this exception in the skill.",
+      "evidence": "screen-recording worker feedback: 'strict TDD red-phase is impractical for screen recording since many tests require the implementation to exist (process spawning, state files).'",
+      "isSystemic": false
+    }
+  ],
+  "rejectedObservations": [
+    {
+      "observation": "xcap system dependencies (wayland-devel, pipewire-devel, clang-devel, mesa-libEGL-devel, mesa-libgbm-devel, libdrm-devel) not documented in init.sh",
+      "reason": "Already documented: init.sh already includes all these packages (added in commit 5827785). environment.md also documents them. Reviewer may have checked an outdated version."
+    }
+  ],
+  "previousRound": null
+}

@@ -60,14 +60,16 @@ let image = primary.capture_image()?; // Returns image::RgbaImage
 // Save to file
 image.save("screenshot.png")?;
 
-// Monitor info
-let name = primary.name();
-let width = primary.width();
-let height = primary.height();
-let x = primary.x();
-let y = primary.y();
-let scale = primary.scale_factor();
+// Monitor info — NOTE: all property accessors return Result, not direct values
+let name = primary.name()?;       // Result<String>
+let width = primary.width()?;     // Result<u32>
+let height = primary.height()?;   // Result<u32>
+let x = primary.x()?;             // Result<i32>
+let y = primary.y()?;             // Result<i32>
+let scale = primary.scale_factor()?; // Result<f32>
 ```
+
+**IMPORTANT:** xcap 0.8.x monitor property methods (`name()`, `width()`, `height()`, `x()`, `y()`, `scale_factor()`) all return `Result` types, not direct values. Wrap each call with `?` or handle errors explicitly. The display-primitive worker created helper wrapper functions for this pattern.
 
 **Dependencies:** Also pulls in `image` crate.
 
