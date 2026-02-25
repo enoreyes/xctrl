@@ -62,37 +62,37 @@ pub enum MouseAction {
     /// Move the cursor to an absolute position
     Move {
         /// X coordinate
-        #[arg(long)]
+        #[arg(long, allow_hyphen_values = true)]
         x: i32,
         /// Y coordinate
-        #[arg(long)]
+        #[arg(long, allow_hyphen_values = true)]
         y: i32,
     },
     /// Perform a left click at the current or specified position
     Click {
         /// X coordinate (optional, moves before clicking)
-        #[arg(long)]
+        #[arg(long, allow_hyphen_values = true)]
         x: Option<i32>,
         /// Y coordinate (optional, moves before clicking)
-        #[arg(long)]
+        #[arg(long, allow_hyphen_values = true)]
         y: Option<i32>,
     },
     /// Perform a double-click at the current or specified position
     DoubleClick {
         /// X coordinate (optional)
-        #[arg(long)]
+        #[arg(long, allow_hyphen_values = true)]
         x: Option<i32>,
         /// Y coordinate (optional)
-        #[arg(long)]
+        #[arg(long, allow_hyphen_values = true)]
         y: Option<i32>,
     },
     /// Perform a right-click at the current or specified position
     RightClick {
         /// X coordinate (optional)
-        #[arg(long)]
+        #[arg(long, allow_hyphen_values = true)]
         x: Option<i32>,
         /// Y coordinate (optional)
-        #[arg(long)]
+        #[arg(long, allow_hyphen_values = true)]
         y: Option<i32>,
     },
     /// Scroll by a given amount (positive = up, negative = down)
@@ -104,16 +104,16 @@ pub enum MouseAction {
     /// Drag from one position to another
     Drag {
         /// Starting X coordinate
-        #[arg(long)]
+        #[arg(long, allow_hyphen_values = true)]
         from_x: i32,
         /// Starting Y coordinate
-        #[arg(long)]
+        #[arg(long, allow_hyphen_values = true)]
         from_y: i32,
         /// Ending X coordinate
-        #[arg(long)]
+        #[arg(long, allow_hyphen_values = true)]
         to_x: i32,
         /// Ending Y coordinate
-        #[arg(long)]
+        #[arg(long, allow_hyphen_values = true)]
         to_y: i32,
     },
     /// Get the current cursor position

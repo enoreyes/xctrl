@@ -1,12 +1,13 @@
 mod cli;
 mod error;
+mod mouse;
 mod output;
 
 use clap::Parser;
 
 use cli::{
-    Cli, ClipboardAction, DisplayAction, KeyboardAction, MouseAction, OsAction, Primitive,
-    ScreenAction, WindowAction,
+    Cli, ClipboardAction, DisplayAction, KeyboardAction, OsAction, Primitive, ScreenAction,
+    WindowAction,
 };
 
 fn main() {
@@ -14,25 +15,13 @@ fn main() {
     let json = cli.json;
 
     match cli.command {
-        Primitive::Mouse { action } => handle_mouse(action, json),
+        Primitive::Mouse { action } => mouse::handle_mouse(action, json),
         Primitive::Keyboard { action } => handle_keyboard(action, json),
         Primitive::Clipboard { action } => handle_clipboard(action, json),
         Primitive::Display { action } => handle_display(action, json),
         Primitive::Screen { action } => handle_screen(action, json),
         Primitive::Window { action } => handle_window(action, json),
         Primitive::Os { action } => handle_os(action, json),
-    }
-}
-
-fn handle_mouse(action: MouseAction, json: bool) {
-    match action {
-        MouseAction::Move { .. } => output::not_yet_implemented("mouse move", json),
-        MouseAction::Click { .. } => output::not_yet_implemented("mouse click", json),
-        MouseAction::DoubleClick { .. } => output::not_yet_implemented("mouse double-click", json),
-        MouseAction::RightClick { .. } => output::not_yet_implemented("mouse right-click", json),
-        MouseAction::Scroll { .. } => output::not_yet_implemented("mouse scroll", json),
-        MouseAction::Drag { .. } => output::not_yet_implemented("mouse drag", json),
-        MouseAction::Position => output::not_yet_implemented("mouse position", json),
     }
 }
 
