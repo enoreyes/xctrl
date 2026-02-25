@@ -212,6 +212,9 @@ pub enum RecordAction {
         /// Output file path for the recording
         #[arg(long)]
         output: String,
+        /// Recording framerate (default: 30)
+        #[arg(long, default_value = "30")]
+        framerate: u32,
     },
     /// Stop the active screen recording
     Stop,
@@ -670,10 +673,38 @@ mod tests {
             Primitive::Screen {
                 action:
                     ScreenAction::Record {
-                        action: RecordAction::Start { output },
+                        action: RecordAction::Start { output, framerate },
                     },
             } => {
                 assert_eq!(output, "/tmp/rec.mp4");
+                assert_eq!(framerate, 30); // default
+            }
+            _ => panic!("expected Screen Record Start"),
+        }
+    }
+
+    #[test]
+    fn test_parse_screen_record_start_with_framerate() {
+        let cli = Cli::try_parse_from([
+            "xctrl",
+            "screen",
+            "record",
+            "start",
+            "--output",
+            "/tmp/rec.mp4",
+            "--framerate",
+            "60",
+        ])
+        .expect("should parse screen record start with framerate");
+        match cli.command {
+            Primitive::Screen {
+                action:
+                    ScreenAction::Record {
+                        action: RecordAction::Start { output, framerate },
+                    },
+            } => {
+                assert_eq!(output, "/tmp/rec.mp4");
+                assert_eq!(framerate, 60);
             }
             _ => panic!("expected Screen Record Start"),
         }

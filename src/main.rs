@@ -5,6 +5,7 @@ mod error;
 mod keyboard;
 mod mouse;
 mod output;
+mod screen;
 
 use clap::Parser;
 
@@ -39,13 +40,7 @@ fn main() {
 
 fn handle_screen(action: ScreenAction, json: bool) {
     match action {
-        ScreenAction::Record { action } => match action {
-            cli::RecordAction::Start { .. } => {
-                output::not_yet_implemented("screen record start", json)
-            }
-            cli::RecordAction::Stop => output::not_yet_implemented("screen record stop", json),
-            cli::RecordAction::Status => output::not_yet_implemented("screen record status", json),
-        },
+        ScreenAction::Record { action } => screen::handle_screen(action, json),
     }
 }
 
