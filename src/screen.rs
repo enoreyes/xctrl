@@ -838,8 +838,8 @@ mod tests {
 
     #[test]
     fn test_save_and_load_state() {
-        // Use a custom state file path for testing to avoid conflicts
-        let test_state_file = "/tmp/xctrl-recording-test-save-load.json";
+        // Use a cross-platform temp directory for testing
+        let test_state_file = std::env::temp_dir().join("xctrl-recording-test-save-load.json");
         let state = RecordingState {
             pid: 12345,
             output: "/tmp/test_output.mp4".to_string(),
@@ -847,21 +847,22 @@ mod tests {
             xvfb_display: None,
         };
         let data = serde_json::to_string_pretty(&state).unwrap();
-        fs::write(test_state_file, &data).unwrap();
+        fs::write(&test_state_file, &data).unwrap();
 
         let loaded: RecordingState =
-            serde_json::from_str(&fs::read_to_string(test_state_file).unwrap()).unwrap();
+            serde_json::from_str(&fs::read_to_string(&test_state_file).unwrap()).unwrap();
         assert_eq!(loaded.pid, 12345);
         assert_eq!(loaded.output, "/tmp/test_output.mp4");
 
-        let _ = fs::remove_file(test_state_file);
+        let _ = fs::remove_file(&test_state_file);
     }
 
     #[test]
     fn test_load_state_missing_file() {
         // Ensure state file doesn't exist
-        let _ = fs::remove_file("/tmp/xctrl-recording-test-missing.json");
-        let data = fs::read_to_string("/tmp/xctrl-recording-test-missing.json");
+        let missing_file = std::env::temp_dir().join("xctrl-recording-test-missing.json");
+        let _ = fs::remove_file(&missing_file);
+        let data = fs::read_to_string(&missing_file);
         assert!(data.is_err());
     }
 }
