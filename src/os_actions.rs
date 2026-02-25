@@ -31,7 +31,8 @@ pub fn handle_os(action: OsAction, json: bool) {
 // ── open-url ────────────────────────────────────────────────────────────────
 
 fn handle_open_url(url: &str, json: bool) {
-    if let Err(e) = open::that(url) {
+    // Use that_detached to avoid blocking if the opener program blocks
+    if let Err(e) = open::that_detached(url) {
         let err = XctrlError::with_hint(
             format!("failed to open URL '{url}': {e}"),
             "Ensure a default browser is configured on this system.",
