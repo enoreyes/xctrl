@@ -459,17 +459,26 @@ mod platform {
     use std::process::Command;
 
     pub fn open_app(name: &str) -> Result<(), String> {
-        let output = Command::new("cmd")
-            .args(["/C", "start", "", name])
+        // First check if the application exists via `where` (Windows equivalent of `which`)
+        let where_output = Command::new("where")
+            .arg(name)
             .output()
-            .map_err(|e| format!("failed to run 'start': {e}"))?;
+            .map_err(|e| format!("failed to run 'where': {e}"))?;
 
-        if output.status.success() {
-            Ok(())
-        } else {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            Err(format!("application '{name}' not found: {}", stderr.trim()))
+        if !where_output.status.success() {
+            return Err(format!("application '{name}' not found on PATH"));
         }
+
+        // Application found on PATH; launch it
+        Command::new("cmd")
+            .args(["/C", "start", "", name])
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .stdin(std::process::Stdio::null())
+            .spawn()
+            .map_err(|e| format!("failed to launch '{name}': {e}"))?;
+
+        Ok(())
     }
 
     pub fn frontmost_app() -> Result<FrontmostAppInfo, String> {
