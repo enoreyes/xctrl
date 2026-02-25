@@ -102,6 +102,118 @@ Test display commands (screenshot, info, list) via CLI. These are stateless read
 
 **Validating image dimensions:** Use `python3 -c "import struct; f=open('/tmp/region.png','rb'); f.read(8); f.read(4); ihdr=f.read(4); w,h=struct.unpack('>II',f.read(8)); print(f'Dimensions: {w}x{h}')"` to check PNG dimensions.
 
+## Flow Validator Guidance: Window Management
+
+Test window management commands (list, focus, resize, move, minimize, maximize, fullscreen) via CLI. These commands require a running X11 display with a window manager.
+
+**Environment setup (already done for you):**
+- Xvfb is running on display :99
+- Metacity window manager is running on :99 (required for _NET_CLIENT_LIST to work)
+- Two xterm windows are running with PIDs available via `xctrl window list --json`
+- Always prefix commands with `DISPLAY=:99`
+
+**IMPORTANT:** xterm window titles are set by the shell (PS1), not the -T flag. The title typically shows the user@host:path. Use `xctrl window list --json` to get the actual window ID and title to use for targeting.
+
+**Isolation rules:**
+- Window operations modify shared X11 window state. If running in parallel, each subagent should operate on DIFFERENT windows identified by ID (not title, since titles may be identical).
+- Focus operations change the _NET_ACTIVE_WINDOW which is shared state — coordinate focus tests carefully.
+- Resize/move are per-window and safe if targeting different windows.
+
+**Testing patterns:**
+1. **List (VAL-WIN-001):**
+   ```bash
+   DISPLAY=:99 cargo run -- window list --json
+   # Should return array with at least 2 windows with title, id, x, y, width, height, pid
+   ```
+
+2. **Focus (VAL-WIN-002):**
+   ```bash
+   DISPLAY=:99 cargo run -- window focus --id <window_id>
+   # Should exit 0
+   ```
+
+3. **Resize (VAL-WIN-003):**
+   ```bash
+   DISPLAY=:99 cargo run -- window resize --id <window_id> --width 800 --height 600
+   # Should exit 0, verify with window list showing updated dimensions
+   ```
+
+4. **Move (VAL-WIN-004):**
+   ```bash
+   DISPLAY=:99 cargo run -- window move --id <window_id> --x 100 --y 100
+   # Should exit 0, verify with window list showing updated position
+   ```
+
+5. **Minimize/Maximize/Fullscreen (VAL-WIN-005..007):**
+   ```bash
+   DISPLAY=:99 cargo run -- window minimize --id <window_id>
+   DISPLAY=:99 cargo run -- window maximize --id <window_id>
+   DISPLAY=:99 cargo run -- window fullscreen --id <window_id>
+   # All should exit 0
+   ```
+
+6. **Window not found (VAL-WIN-008):**
+   ```bash
+   DISPLAY=:99 cargo run -- window focus --title "ThisWindowDoesNotExist_12345"
+   # Should exit non-zero with "window not found" error
+   ```
+
+## Flow Validator Guidance: OS Actions
+
+Test OS action commands (open-url, open-app, notify, frontmost-app, list-apps) via CLI. Some commands have limited functionality in headless environments.
+
+**Environment setup (already done for you):**
+- Xvfb on :99 with metacity running
+- xterm windows running for frontmost-app detection
+- Always prefix commands with `DISPLAY=:99`
+
+**Headless limitations:**
+- `open-url` may fail or succeed depending on whether xdg-open/browser is available. The assertion only requires exit code 0 — but in headless, a browser may not be installed. Accept a clear error if no browser is configured.
+- `open-app` uses exec-based approach on Linux. It may or may not succeed depending on the app. Test with a known-available app.
+- `notify` sends desktop notifications via libnotify. In headless, notification daemon may not be running. Accept exit code 0 (notification sent) or a clear error.
+
+**Isolation rules:**
+- OS commands are mostly stateless (list-apps, frontmost-app are read-only)
+- open-url and open-app launch processes — each subagent should clean up any launched processes
+- notify is fire-and-forget
+
+**Testing patterns:**
+1. **Open URL (VAL-OS-001):**
+   ```bash
+   DISPLAY=:99 cargo run -- os open-url "https://example.com"
+   # Check exit code — may succeed or give a clear error about missing browser
+   ```
+
+2. **Open application (VAL-OS-002):**
+   ```bash
+   DISPLAY=:99 cargo run -- os open-app "xterm"
+   # Should exit 0 — xterm is available
+   ```
+
+3. **Notify (VAL-OS-003):**
+   ```bash
+   DISPLAY=:99 cargo run -- os notify --title "Hello" --body "World"
+   # Should exit 0 if notification system available
+   ```
+
+4. **Frontmost app (VAL-OS-004):**
+   ```bash
+   DISPLAY=:99 cargo run -- os frontmost-app --json
+   # Should return JSON with name and pid fields
+   ```
+
+5. **List apps (VAL-OS-005):**
+   ```bash
+   DISPLAY=:99 cargo run -- os list-apps --json
+   # Should return JSON array of app objects with name and pid
+   ```
+
+6. **Non-existent app (VAL-OS-006):**
+   ```bash
+   DISPLAY=:99 cargo run -- os open-app "NonExistentApp_12345"
+   # Should exit non-zero with clear error
+   ```
+
 ## Flow Validator Guidance: Screen Recording
 
 Test screen recording lifecycle (start, status, stop) via CLI. Recording commands are stateful - they manage a background FFmpeg process and a state file.
