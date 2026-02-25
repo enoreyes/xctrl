@@ -6,6 +6,7 @@ mod keyboard;
 mod mouse;
 mod output;
 mod screen;
+mod window;
 
 use clap::Parser;
 
@@ -45,15 +46,7 @@ fn handle_screen(action: ScreenAction, json: bool) {
 }
 
 fn handle_window(action: WindowAction, json: bool) {
-    match action {
-        WindowAction::List => output::not_yet_implemented("window list", json),
-        WindowAction::Focus { .. } => output::not_yet_implemented("window focus", json),
-        WindowAction::Resize { .. } => output::not_yet_implemented("window resize", json),
-        WindowAction::Move { .. } => output::not_yet_implemented("window move", json),
-        WindowAction::Minimize { .. } => output::not_yet_implemented("window minimize", json),
-        WindowAction::Maximize { .. } => output::not_yet_implemented("window maximize", json),
-        WindowAction::Fullscreen { .. } => output::not_yet_implemented("window fullscreen", json),
-    }
+    window::handle_window(action, json);
 }
 
 fn handle_os(action: OsAction, json: bool) {
