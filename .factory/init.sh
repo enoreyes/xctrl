@@ -37,10 +37,14 @@ fi
 if ! command -v ffmpeg &> /dev/null; then
     echo "Installing ffmpeg..."
     sudo dnf install -y ffmpeg 2>/dev/null || {
-        echo "ffmpeg not in default repos, trying alternatives..."
-        # Try Amazon Linux extras or manual install
-        sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-2023.noarch.rpm 2>/dev/null || true
-        sudo dnf install -y ffmpeg 2>/dev/null || echo "WARNING: ffmpeg installation failed. Screen recording tests will be skipped."
+        echo "ffmpeg not in default repos, downloading static binary..."
+        curl -sL https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz -o /tmp/ffmpeg-static.tar.xz 2>/dev/null && \
+        tar xf /tmp/ffmpeg-static.tar.xz -C /tmp/ 2>/dev/null && \
+        sudo cp /tmp/ffmpeg-*-amd64-static/ffmpeg /usr/local/bin/ffmpeg 2>/dev/null && \
+        sudo chmod +x /usr/local/bin/ffmpeg && \
+        rm -rf /tmp/ffmpeg-static.tar.xz /tmp/ffmpeg-*-amd64-static && \
+        echo "FFmpeg static binary installed to /usr/local/bin/ffmpeg" || \
+        echo "WARNING: ffmpeg installation failed. Screen recording tests will be skipped."
     }
 fi
 
