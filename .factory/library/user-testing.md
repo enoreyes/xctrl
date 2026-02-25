@@ -79,3 +79,90 @@ xctrl is a stateless CLI tool. Each command invocation is independent. Testing i
 **Binary path:** Use `cargo run --` for all tests (from the repo root). This ensures the latest build is used.
 
 **Environment:** Source `$HOME/.cargo/env` before running cargo commands if needed.
+
+## Flow Validator Guidance: Display
+
+Test display commands (screenshot, info, list) via CLI. These are stateless read-only operations (except screenshot which writes a file).
+
+**Xvfb setup:** Xvfb is already running on display :99. Always prefix commands with `DISPLAY=:99`.
+
+**Isolation rules:**
+- Display info/list commands are read-only and fully safe to parallelize
+- Screenshot commands write to specified output files. Each subagent MUST use unique output file paths (e.g., `/tmp/test_display_<subagent_id>_screenshot.png`)
+- No shared mutable state between display commands
+
+**Testing patterns:**
+- `DISPLAY=:99 cargo run -- display info --json` → check JSON has width, height, scale_factor keys
+- `DISPLAY=:99 cargo run -- display list --json` → check JSON is array with at least one monitor
+- `DISPLAY=:99 cargo run -- display screenshot --output /tmp/test.png` → verify file exists and is valid PNG
+- `DISPLAY=:99 cargo run -- display screenshot --output /tmp/region.png --x 0 --y 0 --width 100 --height 100` → verify file and dimensions
+- `cargo run -- display screenshot --output /nonexistent/dir/shot.png` → verify non-zero exit code and error message
+
+**Validating PNG files:** Use `python3 -c "import struct; f=open('/tmp/test.png','rb'); h=f.read(8); print('Valid PNG' if h[:8]==b'\\x89PNG\\r\\n\\x1a\\n' else 'Not PNG')"` to verify PNG header.
+
+**Validating image dimensions:** Use `python3 -c "import struct; f=open('/tmp/region.png','rb'); f.read(8); f.read(4); ihdr=f.read(4); w,h=struct.unpack('>II',f.read(8)); print(f'Dimensions: {w}x{h}')"` to check PNG dimensions.
+
+## Flow Validator Guidance: Screen Recording
+
+Test screen recording lifecycle (start, status, stop) via CLI. Recording commands are stateful - they manage a background FFmpeg process and a state file.
+
+**Xvfb setup:** Xvfb is already running on display :99. Always prefix commands with `DISPLAY=:99` for start/status (stop reads from state file).
+
+**CRITICAL isolation rules:**
+- Screen recording uses a SHARED state file (`/tmp/xctrl-recording.json` or `~/.xctrl/recording.json`) 
+- Only ONE subagent may test recording at a time - recording tests MUST be sequential
+- Each test run should clean up: ensure recording is stopped before starting a new one
+- Use unique output file paths for each test: `/tmp/test_rec_<test_name>.mp4`
+
+**Testing patterns:**
+1. **Full lifecycle (VAL-REC-001, VAL-REC-002, VAL-CROSS-004):**
+   ```bash
+   DISPLAY=:99 cargo run -- screen record start --output /tmp/test_rec.mp4
+   # Check exit code 0
+   DISPLAY=:99 cargo run -- screen record status --json
+   # Verify {"recording": true, "output": "/tmp/test_rec.mp4", "pid": N}
+   sleep 3  # Let it record for a few seconds
+   DISPLAY=:99 cargo run -- screen record stop
+   # Verify exit code 0, file exists with size > 0
+   ```
+
+2. **Cold status (VAL-REC-008):**
+   ```bash
+   # Ensure no recording is active first
+   DISPLAY=:99 cargo run -- screen record status --json
+   # Verify {"recording": false} and exit code 0
+   ```
+
+3. **Double start (VAL-REC-006):**
+   ```bash
+   DISPLAY=:99 cargo run -- screen record start --output /tmp/rec1.mp4
+   DISPLAY=:99 cargo run -- screen record start --output /tmp/rec2.mp4
+   # Second should fail with "recording already in progress"
+   DISPLAY=:99 cargo run -- screen record stop  # cleanup
+   ```
+
+4. **Stop when not recording (VAL-REC-007):**
+   ```bash
+   DISPLAY=:99 cargo run -- screen record stop
+   # Should fail with "no active recording" message
+   ```
+
+5. **FFmpeg missing (VAL-REC-005):**
+   ```bash
+   PATH=/usr/bin:/bin cargo run -- screen record start --output /tmp/rec.mp4
+   # Temporarily hide ffmpeg from PATH and check error message
+   ```
+
+6. **Headless auto-Xvfb (VAL-REC-004):**
+   ```bash
+   # Unset DISPLAY and test auto-detection
+   unset DISPLAY
+   cargo run -- screen record start --output /tmp/headless_rec.mp4
+   # Should auto-start Xvfb and begin recording
+   sleep 3
+   cargo run -- screen record stop
+   ```
+
+**FFmpeg location:** FFmpeg is installed at `/usr/local/bin/ffmpeg` (or discoverable via `which ffmpeg`).
+
+**Cleanup:** Always stop any active recording at the end of tests. Check state file and kill orphaned FFmpeg processes if needed.
